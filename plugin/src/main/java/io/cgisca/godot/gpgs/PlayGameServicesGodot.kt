@@ -157,8 +157,12 @@ class PlayGameServicesGodot(godot: Godot) : GodotPlugin(godot), AchievementsList
 
     override fun onMainActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == SignInController.RC_SIGN_IN) {
-            val googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data!!)
-            signInController.onSignInActivityResult(googleSignInResult)
+            if (data != null) {
+                val googleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
+                signInController.onSignInActivityResult(googleSignInResult)
+            } else {
+                signInController.onSignInActivityResult(null)
+            }
         } else if (requestCode == SavedGamesController.RC_SAVED_GAMES) {
             if (data != null) {
                 if (data.hasExtra(SnapshotsClient.EXTRA_SNAPSHOT_METADATA)) {
