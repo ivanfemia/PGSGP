@@ -1,5 +1,6 @@
 package io.cgisca.godot.gpgs.achievements
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.games.Games
@@ -74,38 +75,43 @@ class AchievementsController(
         if (connectionController.isConnected().first && googleSignInAccount != null) {
             Games.getAchievementsClient(activity, googleSignInAccount).load(forceReload)
                 .addOnCompleteListener { task ->
-                    val achievementData = task.result?.get()
-                    if (task.isSuccessful && achievementData != null) {
-
-                        val list = ArrayList<AchievementInfo>()
-                        for(a in achievementData) {
-
-                            val type = a.getType()
-                            val current_steps = when(type == Achievement.TYPE_INCREMENTAL) {
-                                true -> a.getCurrentSteps()
-                                false -> null
-                            }
-
-                            val total_steps = when(type == Achievement.TYPE_INCREMENTAL) {
-                                true -> a.getTotalSteps()
-                                false -> null
-                            }
-
-                            list.add(AchievementInfo(
-                                a.getAchievementId(),
-                                a.getName(),
-                                a.getDescription(),
-                                a.getState(),
-                                type,
-                                current_steps,
-                                total_steps,
-                                a.getXpValue()
-                            ))
-                        }
-
-                        achievementsListener.onAchievementInfoLoaded(Gson().toJson(list))
-                    } else {
+                    if (!task.isSuccessful || task.result == null) {
                         achievementsListener.onAchievementInfoLoadingFailed()
+                    } else {
+                        val achievementData = task.result?.get()
+                        if (achievementData != null) {
+
+                            val list = ArrayList<AchievementInfo>()
+                            for (a in achievementData) {
+
+                                val type = a.getType()
+                                val currentSteps = when (type == Achievement.TYPE_INCREMENTAL) {
+                                    true -> a.getCurrentSteps()
+                                    false -> null
+                                }
+
+                                val totalSteps = when (type == Achievement.TYPE_INCREMENTAL) {
+                                    true -> a.getTotalSteps()
+                                    false -> null
+                                }
+
+                                list.add(
+                                    AchievementInfo(
+                                        a.getAchievementId(),
+                                        a.getName(),
+                                        a.getDescription(),
+                                        a.getState(),
+                                        type,
+                                        currentSteps,
+                                        totalSteps,
+                                        a.getXpValue()
+                                    )
+                                )
+                            }
+                            achievementsListener.onAchievementInfoLoaded(Gson().toJson(list))
+                        } else {
+                            achievementsListener.onAchievementInfoLoadingFailed()
+                        }
                     }
                 }
         }
